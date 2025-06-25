@@ -1,24 +1,37 @@
-# Étape de construction
-FROM node:22-alpine AS builder
+# Étape de développement
+FROM node:18 AS development
 
 WORKDIR /app
 
-# 1. Copie des fichiers de dépendances (étape mise en cache)
-COPY package.json package-lock.json* ./
+# Copie des fichiers de dépendances
+COPY package*.json ./
 
-# 2. Installation des dépendances (mise en cache si package.json inchangé)
-RUN npm ci --no-audit --prefer-offline
 
-# Étape d'exécution finale
-FROM node:22-alpine
+# Installation des dépendances
+RUN npm install
 
-WORKDIR /app
-
-# Copie des fichiers de dépendances (depuis le builder)
-COPY --from=builder /app/node_modules ./node_modules
-
-# Copie du reste de l'application (cette étape invalidera le cache si le code change)
+# Copie du reste de l'application
 COPY . .
+
+# Commande par défaut pour le développement
+CMD ["npm", "run", "dev"]
+
+# Étape de production
+FROM node:18-slim AS production
+
+WORKDIR /app
+
+# Copie des fichiers de dépendances
+COPY package*.json ./
+
+# Installation des dépendances de production uniquement
+RUN npm ci --only=production
+
+# Copie du code de l'application
+COPY . .
+
+# Utilisateur non-root pour la sécurité
+USER node
 
 # Création du dossier pour les logs
 RUN mkdir -p logs
@@ -26,5 +39,5 @@ RUN mkdir -p logs
 # Exposition des ports
 EXPOSE 3000
 
-# Commande de démarrage
-CMD ["npm", "start"]
+# Commande de démarrage pour la production
+CMD ["node", "server.js"]
