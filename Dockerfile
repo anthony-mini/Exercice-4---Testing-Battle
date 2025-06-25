@@ -27,17 +27,17 @@ COPY package*.json ./
 # Installation des dépendances de production uniquement
 RUN npm ci --only=production
 
-# Copie du code de l'application
-COPY . .
+# Création du dossier pour les logs et réglage des permissions
+RUN mkdir -p /app/logs && chown -R node:node /app
 
 # Utilisateur non-root pour la sécurité
 USER node
 
-# Création du dossier pour les logs
-RUN mkdir -p logs
-
 # Exposition des ports
 EXPOSE 3000
+
+# Copie du code de l'application (après avoir défini les permissions)
+COPY --chown=node:node . .
 
 # Commande de démarrage pour la production
 CMD ["node", "server.js"]
