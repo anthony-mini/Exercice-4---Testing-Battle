@@ -8,7 +8,8 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: ${{ github.repository }}
+  # Utilise uniquement le nom du dépôt sans l'organisation
+  IMAGE_NAME: exercice-4-testing-battle
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
 
 jobs:
