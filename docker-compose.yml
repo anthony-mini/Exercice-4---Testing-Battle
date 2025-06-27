@@ -1,18 +1,26 @@
 services:
   app:
-    image: ${DOCKERHUB_USERNAME}/exercice-4-testing-battle:latest
-    container_name: app
+    # En développement, on utilise un build local, en production on peut utiliser une image préexistante
+    image: ${DOCKERHUB_USERNAME:-user}/exercice-4-testing-battle:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-financiere
     restart: always
-    env_file: .env
+    env_file: .env.${NODE_ENV:-development}
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=${PORT:-3000}
+      - DATABASE_URL=postgresql://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-conversion_financiere}
     ports:
-      - "3000:3000"
+      - "${HOST_PORT:-3001}:${PORT:-3000}"
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      # Montage du code source pour le développement
+      - ./:/app
+      - node_modules:/app/node_modules
     deploy:
       resources:
         limits:
@@ -23,10 +31,10 @@ services:
           memory: 512M
 
   db:
-    image: postgres:15-alpine
-    container_name: db
+    image: "postgres:15-alpine"
+    container_name: db-financiere
     restart: always
-    env_file: .env
+    env_file: .env.${NODE_ENV:-development}
     environment:
       - POSTGRES_USER=${DB_USER:-postgres}
       - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
@@ -43,3 +51,4 @@ services:
 
 volumes:
   postgres_data:
+  node_modules:

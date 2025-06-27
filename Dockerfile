@@ -25,7 +25,10 @@ WORKDIR /app
 COPY package*.json ./
 
 # Installation des dépendances de production uniquement
-RUN npm ci --only=production
+RUN npm ci
+
+# Vérification que dotenv est bien installé
+RUN npm install dotenv
 
 # Création du dossier pour les logs et réglage des permissions
 RUN mkdir -p /app/logs && chown -R node:node /app
