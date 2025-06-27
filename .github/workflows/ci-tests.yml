@@ -1,8 +1,8 @@
 name: CI Tests
 
+run-name: Tests unitaires
+
 on:
-  push:
-    branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
 

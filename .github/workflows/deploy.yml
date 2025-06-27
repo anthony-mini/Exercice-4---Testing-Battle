@@ -1,10 +1,10 @@
 name: Build and Deploy
 
+run-name: Déploiement en production
+
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 env:
   REGISTRY: docker.io
@@ -40,7 +40,7 @@ jobs:
   deploy-to-vps:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
