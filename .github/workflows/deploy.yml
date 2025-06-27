@@ -43,6 +43,10 @@ jobs:
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1  # Récupération minimale du code
       - name: Copy files to VPS
         uses: appleboy/scp-action@master
         with:
