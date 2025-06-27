@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     image: ${DOCKERHUB_USERNAME:-user}/exercice-4-testing-battle:${TAG:-latest}

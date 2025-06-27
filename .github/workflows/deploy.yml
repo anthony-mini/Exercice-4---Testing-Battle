@@ -88,6 +88,20 @@ jobs:
             echo "\n--- DEBUG: Image contents ---"
             docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/exercice-4-testing-battle:latest ls -la /app
             
+            # Vérifier et configurer le pare-feu
+            echo "\n--- DEBUG: Firewall status ---"
+            sudo ufw status
+            echo "Ensuring port 3001 is open..."
+            sudo ufw allow 3001/tcp
+            
+            # Vérifier l'accessibilité locale
+            echo "\n--- DEBUG: Testing local API access ---"
+            curl -v localhost:3001 || echo "API not accessible locally"
+
+            # Vérifier l'accessibilité distante
+            echo "\n--- DEBUG: Testing remote API access ---"
+            curl -v http://31.207.37.112:3001 || echo "API not accessible remotely"
+            
             # Nettoyer les images inutilisées
             echo "Cleaning unused images..."
             docker system prune -f
