@@ -43,8 +43,8 @@ app.use((err, req, res, next) => {
 });
 
 // Démarrage du serveur
-const server = app.listen(port, () => {
-  console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
+const server = app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is running in ${process.env.NODE_ENV || 'development'} mode on port ${port} (0.0.0.0)`);
 });
 
 module.exports = { app, server };
