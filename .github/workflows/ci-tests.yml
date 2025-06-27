@@ -1,5 +1,8 @@
 name: CI Tests
 
+# Permissions par défaut
+permissions: read-all
+
 run-name: Tests unitaires
 
 on:
@@ -212,45 +215,12 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Download all test results
-        uses: actions/download-artifact@v4
-        with:
-          path: all-test-results
-          merge-multiple: true
-
-      - name: Merge test results
+      - name: Create test summary
         run: |
-          mkdir -p merged-test-results
-          cp -r all-test-results/*/* merged-test-results/ || true
-          echo "## Rapport de tests" > test-report.md
-          echo "### Résumé des tests" >> test-report.md
-          echo "✅ Tests unitaires: terminés" >> test-report.md
-          echo "✅ Tests d'intégration: terminés" >> test-report.md
-          echo "✅ Tests fonctionnels: terminés" >> test-report.md
-          echo "\n### Artefacts disponibles" >> test-report.md
-          echo "- all-test-results: Rapport consolidé" >> test-report.md
-          echo "- unit-test-results: Résultats des tests unitaires" >> test-report.md
-          echo "- integration-test-results: Résultats des tests d'intégration" >> test-report.md
-          echo "- functional-test-results: Résultats des tests fonctionnels" >> test-report.md
-
-      - name: Upload merged test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: all-test-results
-          path: merged-test-results
-          retention-days: 3
-          if-no-files-found: ignore
-          
-      - name: Publish Test Report
-        uses: actions/github-script@v7
-        if: always()
-        with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('test-report.md', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            })
+          echo "## 📊 Rapport de tests" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Résumé des tests" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests unitaires: Terminés" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests d'intégration: Terminés" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests fonctionnels: Terminés" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Artefacts disponibles dans l'onglet Actions" >> $GITHUB_STEP_SUMMARY
