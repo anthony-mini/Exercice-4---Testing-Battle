@@ -7,10 +7,10 @@
     "start": "NODE_ENV=production node server.js",
     "dev": "NODE_ENV=development nodemon server.js",
     "test": "NODE_ENV=test jest --watchAll --detectOpenHandles",
-    "test:ci": "NODE_ENV=test jest --ci --coverage",
-    "test:unit": "NODE_ENV=test jest --ci --coverage --testMatch='**/tests/unitaires/**/*.test.js'",
-    "test:integration": "NODE_ENV=test jest --ci --coverage --testMatch='**/tests/intégrations/**/*.test.js'",
-    "test:functional": "NODE_ENV=test jest --ci --coverage --testMatch='**/tests/fonctionnels/**/*.test.js'"
+    "test:ci": "NODE_ENV=test jest --ci --coverage --forceExit --detectOpenHandles",
+    "test:unit": "NODE_ENV=test jest --ci --coverage --forceExit --detectOpenHandles --testMatch='**/tests/unitaires/**/*.test.js'",
+    "test:integration": "NODE_ENV=test jest --ci --coverage --forceExit --detectOpenHandles --testMatch='**/tests/intégrations/**/*.test.js'",
+    "test:functional": "NODE_ENV=test jest --ci --coverage --forceExit --detectOpenHandles --testMatch='**/tests/fonctionnels/**/*.test.js'"
   },
   "dependencies": {
     "cors": "^2.8.5",
