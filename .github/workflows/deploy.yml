@@ -53,7 +53,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml,Dockerfile"
+          source: "docker-compose.yml"
           target: /opt/your-app/
 
       - name: Deploy to VPS
@@ -79,6 +79,14 @@ jobs:
             echo "Checking container status..."
             sleep 5
             docker-compose ps
+            
+            # Débogage - Afficher les logs pour comprendre le problème
+            echo "\n--- DEBUG: Container logs ---"
+            docker-compose logs app
+            
+            # Vérifier la structure de l'image
+            echo "\n--- DEBUG: Image contents ---"
+            docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/exercice-4-testing-battle:latest ls -la /app
             
             # Nettoyer les images inutilisées
             echo "Cleaning unused images..."
