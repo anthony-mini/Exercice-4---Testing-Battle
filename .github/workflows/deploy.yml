@@ -53,7 +53,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.prod.yml"
           target: /opt/your-app/
 
       - name: Deploy to VPS
@@ -69,20 +69,20 @@ jobs:
             
             # Mettre à jour les images
             echo "Pulling latest images..."
-            docker-compose pull
+            docker-compose -f docker-compose.prod.yml pull
             
-            # Redémarrer les conteneurs
+            # Redémarrer les conteneurs avec le fichier docker-compose.prod.yml
             echo "Restarting containers with latest images..."
-            docker-compose up -d --force-recreate
+            docker-compose -f docker-compose.prod.yml up -d --force-recreate
             
             # Vérifier que les conteneurs sont bien démarrés
             echo "Checking container status..."
             sleep 5
-            docker-compose ps
+            docker-compose -f docker-compose.prod.yml ps
             
             # Débogage - Afficher les logs pour comprendre le problème
             echo "\n--- DEBUG: Container logs ---"
-            docker-compose logs app
+            docker-compose -f docker-compose.prod.yml logs app
             
             # Vérifier la structure de l'image
             echo "\n--- DEBUG: Image contents ---"
