@@ -53,7 +53,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "docker-compose.yml"
+          source: "docker-compose.yml,Dockerfile"
           target: /opt/your-app/
 
       - name: Deploy to VPS
@@ -64,9 +64,22 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd /opt/your-app
+            # Se connecter à Docker Hub de façon sécurisée
+            echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            
             # Mettre à jour les images
+            echo "Pulling latest images..."
             docker-compose pull
+            
             # Redémarrer les conteneurs
+            echo "Restarting containers with latest images..."
             docker-compose up -d --force-recreate
+            
+            # Vérifier que les conteneurs sont bien démarrés
+            echo "Checking container status..."
+            sleep 5
+            docker-compose ps
+            
             # Nettoyer les images inutilisées
+            echo "Cleaning unused images..."
             docker system prune -f
