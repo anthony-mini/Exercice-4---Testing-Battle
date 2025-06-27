@@ -58,7 +58,6 @@ API REST pour les conversions de devises et calculs financiers, développée ave
 - **Express Validator** : ^7.2.1
 - **CORS** : ^2.8.5
 - **Jest** : ^30.0.2 (pour les tests)
-- **Supertest** : ^7.1.1 (pour les tests d'API)
 
 ## 🔒 Variables d'environnement
 

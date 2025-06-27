@@ -1,43 +1,48 @@
 name: CI Tests
 
+# Permissions par défaut
+permissions: read-all
+
+run-name: Tests unitaires
+
 on:
-  push:
-    branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
+    paths:
+      - '**.js'
+      - 'package*.json'
+      - '.github/workflows/ci-tests.yml'
 
 jobs:
-  test:
-    name: Run Tests
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:15-alpine
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: conversion_financiere_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
+      - name: Generate cache key
+        id: cache-key
+        run: echo "key=${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefer-offline --no-audit
+        
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Create .env file
         run: |
@@ -48,18 +53,174 @@ jobs:
           echo "DB_NAME=conversion_financiere_test" >> .env
           echo "DB_PORT=5432" >> .env
 
-      - name: Run tests
-        run: npm test
+  unit-tests:
+    name: Unit Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Create .env file
+        run: |
+          echo "NODE_ENV=test" > .env
+          echo "PORT=3000" >> .env
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          NODE_ENV: test
+
+      - name: Upload unit test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: coverage/unit/
+          retention-days: 3
+          if-no-files-found: ignore
+
+  integration-tests:
+    name: Integration Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conversion_financiere_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 2s --health-retries 3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Create .env file
+        run: |
+          echo "NODE_ENV=test" > .env
+          echo "PORT=3000" >> .env
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=postgres" >> .env
+          echo "DB_NAME=conversion_financiere_test" >> .env
+          echo "DB_PORT=5432" >> .env
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run integration tests
+        run: npm run test:integration
         env:
           NODE_ENV: test
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conversion_financiere_test
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v3
+      - name: Upload integration test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: |
-            coverage/
-            test-results/
-          retention-days: 5
+          name: integration-test-results
+          path: coverage/integration/
+          retention-days: 3
+          if-no-files-found: ignore
+
+  functional-tests:
+    name: Functional Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: conversion_financiere_test
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 2s --health-retries 3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Restore cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Create .env file
+        run: |
+          echo "NODE_ENV=test" > .env
+          echo "PORT=3000" >> .env
+          echo "DB_USER=postgres" >> .env
+          echo "DB_PASSWORD=postgres" >> .env
+          echo "DB_NAME=conversion_financiere_test" >> .env
+          echo "DB_PORT=5432" >> .env
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run functional tests
+        run: npm run test:functional
+        env:
+          NODE_ENV: test
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/conversion_financiere_test
+
+      - name: Upload functional test results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: functional-test-results
+          path: coverage/functional/
+          retention-days: 3
+          if-no-files-found: ignore
+
+  report:
+    name: Generate Test Report
+    needs: [unit-tests, integration-tests, functional-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create test summary
+        run: |
+          echo "## 📊 Rapport de tests" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Résumé des tests" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests unitaires: Terminés" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests d'intégration: Terminés" >> $GITHUB_STEP_SUMMARY
+          echo "- Tests fonctionnels: Terminés" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 Artefacts disponibles dans l'onglet Actions" >> $GITHUB_STEP_SUMMARY

@@ -1,10 +1,10 @@
 name: Build and Deploy
 
+run-name: Déploiement en production
+
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 env:
   REGISTRY: docker.io
@@ -34,19 +34,19 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/exercice-4-testing-battle:latest
-          no-cache: true  # Désactive le cache pour un build frais
-          pull: true      # Toujours pull l'image de base
-
+          no-cache: true  
+          pull: true      
+          
   deploy-to-vps:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 1  # Récupération minimale du code
+          fetch-depth: 1
       - name: Copy files to VPS
         uses: appleboy/scp-action@master
         with:
